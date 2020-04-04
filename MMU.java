@@ -1,3 +1,13 @@
+/**
+ * Ilan Kleiman
+ * 110942711
+ * 
+ * I pledge my honor that all parts of this project were done by me individually, 
+ * without collaboration with anyone, and without consulting any external sources 
+ * that provide full or partial solutions to a similar project.
+ * I understand that breaking this pledge will result in an "F" for the entire course.
+ */
+
 package osp.Memory;
 
 import java.util.*;
@@ -28,7 +38,7 @@ public class MMU extends IflMMU {
     }
 
     /**
-     * This method handlies memory references. The method must calculate, which
+     * This method handles memory references. The method must calculate, which
      * memory page contains the memoryAddress, determine, whether the page is valid,
      * start page fault by making an interrupt if the page is invalid, finally, if
      * the page is still valid, i.e., not swapped out by another thread while this
@@ -47,6 +57,59 @@ public class MMU extends IflMMU {
     static public PageTableEntry do_refer(int memoryAddress, int referenceType, ThreadCB thread) {
         // your code goes here
 
+        /**
+         * Get the page number of a memory address (get its index num from memory
+         * address).
+         */
+        int num = memoryAddress / (int) Math.pow(2.0, getVirtualAddressBits() - getPageAddressBits());
+
+        /**
+         * Get the PageTableEntry from it's calculated index above.
+         */
+        PageTableEntry pEntry = getPTBR().pages[num];
+
+        /**
+         * If the page isn't validating, attempt to stop/interrupt processes
+         */
+        if (pEntry.getValidatingThread() == null && pEntry.isValid() == false) {
+            InterruptVector.setPage(pEntry);
+            InterruptVector.setThread(thread);
+            InterruptVector.setInterruptType(referenceType);
+
+            // do a cpu interrupt w/PageFault since thread not valid and no validating
+            // thread.
+            CPU.interrupt(PageFault);
+        } else if (pEntry.isValid() == false) {
+            /**
+             * Have a validating thread so we should attempt to suspend the thread. Since it
+             * might be already going in/out of memory.
+             */
+            thread.suspend(pEntry);
+        }
+
+        /**
+         * If the thread status is kill, then just return current page table.
+         */
+        if (thread.getStatus() == GlobalVariables.ThreadKill) {
+            return pEntry;
+        }
+
+        /**
+         * Since the page is referenced, set that it has been referenced. And, set dirty
+         * bit if it's a write type.
+         */
+        pEntry.getFrame().setReferenced(true);
+        if (referenceType == GlobalVariables.MemoryWrite) {
+            pEntry.getFrame().setDirty(true);
+        } else if (referenceType == GlobalVariables.MemoryRead) {
+            // don't need to set the bit in this case.
+            // pEntry.getFrame().setDirty
+        }
+
+        /**
+         * Finally return the page table after finished setting bits.
+         */
+        return pEntry;
     }
 
     /**
@@ -57,8 +120,10 @@ public class MMU extends IflMMU {
      * @OSPProject Memory
      */
     public static void atError() {
-        // your code goes here
-
+        /**
+         * No need to do anything when an error occurs.
+         */
+        return;
     }
 
     /**
@@ -70,8 +135,10 @@ public class MMU extends IflMMU {
      * @OSPProject Memory
      */
     public static void atWarning() {
-        // your code goes here
-
+        /**
+         * No need to do anything when a warning occurs.
+         */
+        return;
     }
 
     /*
