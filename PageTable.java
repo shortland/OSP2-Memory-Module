@@ -35,7 +35,16 @@ public class PageTable extends IflPageTable {
      */
     public PageTable(TaskCB ownerTask) {
         // your code goes here
+        super(ownerTask);
 
+        /**
+         * Initialize the array of page table entry objects.
+         */
+        int num = (int) Math.pow(2, MMU.getPageAddressBits());
+        pages = new PageTableEntry[num];
+        for (int i = 0; i < num; ++i) {
+            pages[i] = new PageTableEntry(this, i);
+        }
     }
 
     /**
@@ -46,7 +55,42 @@ public class PageTable extends IflPageTable {
      */
     public void do_deallocateMemory() {
         // your code goes here
+        /**
+         * Get task of this page.
+         */
+        TaskCB currentTask = this.getTask();
 
+        /**
+         * Iterate through frame table and clean up each of the frames.
+         */
+        FrameTableEntry currentFrame;
+        PageTableEntry currentPage;
+        for (int i = 0; i < MMU.getFrameTableSize(); ++i) {
+            /**
+             * Get current frame & page.
+             */
+            currentFrame = MMU.getFrame(i);
+            currentPage = MMU.getFrame(i).getPage();
+
+            /**
+             * If the current page isn't null, and task is this one, then clean it up.
+             */
+            // TODO:
+            // might need:
+            // currentPage != null &&
+            if (currentPage.getTask() == currentTask) {
+                currentFrame.setPage(null);
+                currentFrame.setDirty(false);
+                currentFrame.setReferenced(false);
+
+                /**
+                 * If it's reserved, then unreserve the task.
+                 */
+                if (currentFrame.getReserved() == currentTask) {
+                    currentFrame.setUnreserved(currentTask);
+                }
+            }
+        }
     }
 
     /*
