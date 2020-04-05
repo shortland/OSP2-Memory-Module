@@ -34,7 +34,6 @@ public class PageTable extends IflPageTable {
      * @OSPProject Memory
      */
     public PageTable(TaskCB ownerTask) {
-        // your code goes here
         super(ownerTask);
 
         /**
@@ -54,7 +53,6 @@ public class PageTable extends IflPageTable {
      * @OSPProject Memory
      */
     public void do_deallocateMemory() {
-        // your code goes here
         /**
          * Get task of this page.
          */

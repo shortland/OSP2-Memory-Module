@@ -35,8 +35,7 @@ public class PageTableEntry extends IflPageTableEntry {
      * @OSPProject Memory
      */
     public PageTableEntry(PageTable ownerPageTable, int pageNumber) {
-        // your code goes here
-
+        super(ownerPageTable, pageNumber);
     }
 
     /**
@@ -52,8 +51,39 @@ public class PageTableEntry extends IflPageTableEntry {
      * @OSPProject Memory
      */
     public int do_lock(IORB iorb) {
-        // your code goes here
+        /**
+         * First increment lockcount.
+         */
+        this.getFrame().incrementLockCount();
 
+        /**
+         * Now check if the page is vaid. If it is not valid & no validation event
+         * exists, start page fault with handlePageFault().
+         */
+        if (this.isValid() == false && this.getValidatingThread() == null) {
+            PageFaultHandler.handlePageFault(this.iorb.getThread(), GlobalVariables.MemoryLock, this);
+
+            // if the thread was killed, then return failure.
+            if (this.orb.getThread().getStatus() == ThreadKill) {
+                return FAILURE;
+            }
+        } else if (this.isValid() == false) {
+            if (this.getValidatingThread() != this.iorb.getThread()) {
+                this.iorb.getThread().suspend(this);
+
+                // TODO: maybe use this?
+                // if (this.iorb.getThread().getStatus() != ThreadWaiting) {
+                // return FAILURE;
+                // }
+
+                // wasn't able to suspend assuminly.
+                if (this.isValid() == false) {
+                    return FAILURE;
+                }
+            }
+        }
+
+        return SUCCESS;
     }
 
     /**
@@ -64,8 +94,16 @@ public class PageTableEntry extends IflPageTableEntry {
      * @OSPProject Memory
      */
     public void do_unlock() {
-        // your code goes here
+        /**
+         * If there's an existing lock, then decrement the lock count.
+         */
+        if (this.getFrame().getLockCount() > 0) {
+            this.getFrame().decrementLockCount();
+            return;
+        }
 
+        // no lock present.
+        return;
     }
 
     /*
