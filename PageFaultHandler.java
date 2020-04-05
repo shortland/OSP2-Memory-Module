@@ -78,16 +78,20 @@ public class PageFaultHandler extends IflPageFaultHandler {
      * @OSPProject Memory
      */
     public static int do_handlePageFault(ThreadCB thread, int referenceType, PageTableEntry page) {
-        // your code goes here
+        /**
+         * PageFault shouldn't of occured since the page is valid.
+         */
+        if (page.isValid()) {
+            return FAILURE;
+        }
 
+        // if (page.getValidatingThread() != null) {
+        // }
+
+        FrameTableEntry frame = choose_new_frame();
     }
 
-    /*
-     * Feel free to add methods/fields to improve the readability of your code
-     */
-
+    private static FrameTableEntry choose_new_frame() {
+        return null;
+    }
 }
-
-/*
- * Feel free to add local classes to improve the readability of your code
- */

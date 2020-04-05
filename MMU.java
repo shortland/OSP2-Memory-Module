@@ -41,6 +41,11 @@ public class MMU extends IflMMU {
         for (int i = 0; i < MMU.getFrameTableSize(); ++i) {
             setFrame(i, new FrameTableEntry(i));
         }
+
+        /**
+         * Initialize the cleaner hand (daemon).
+         */
+        Daemon.create("Clock hand cleaner", new ClockHandCleaner(), 4000);
     }
 
     /**
@@ -72,50 +77,50 @@ public class MMU extends IflMMU {
         /**
          * Get the PageTableEntry from it's calculated index above.
          */
-        PageTableEntry pEntry = getPTBR().pages[num];
+        PageTableEntry page = getPTBR().pages[num];
 
         /**
          * If the page isn't validating, attempt to stop/interrupt processes
          */
-        if (pEntry.getValidatingThread() == null && pEntry.isValid() == false) {
-            InterruptVector.setPage(pEntry);
+        if (page.getValidatingThread() == null && page.isValid() == false) {
+            InterruptVector.setPage(page);
             InterruptVector.setThread(thread);
             InterruptVector.setInterruptType(referenceType);
 
             // do a cpu interrupt w/PageFault since thread not valid and no validating
             // thread.
             CPU.interrupt(PageFault);
-        } else if (pEntry.isValid() == false) {
+        } else if (page.isValid() == false) {
             /**
              * Have a validating thread so we should attempt to suspend the thread. Since it
              * might be already going in/out of memory.
              */
-            thread.suspend(pEntry);
+            thread.suspend(page);
         }
 
         /**
          * If the thread status is kill, then just return current page table.
          */
         if (thread.getStatus() == GlobalVariables.ThreadKill) {
-            return pEntry;
+            return page;
         }
 
         /**
          * Since the page is referenced, set that it has been referenced. And, set dirty
          * bit if it's a write type.
          */
-        pEntry.getFrame().setReferenced(true);
+        page.getFrame().setReferenced(true);
         if (referenceType == GlobalVariables.MemoryWrite) {
-            pEntry.getFrame().setDirty(true);
+            page.getFrame().setDirty(true);
         } else if (referenceType == GlobalVariables.MemoryRead) {
             // don't need to set the bit in this case.
-            // pEntry.getFrame().setDirty
+            // page.getFrame().setDirty
         }
 
         /**
          * Finally return the page table after finished setting bits.
          */
-        return pEntry;
+        return page;
     }
 
     /**
@@ -153,6 +158,9 @@ public class MMU extends IflMMU {
 
 }
 
-/*
- * Feel free to add local classes to improve the readability of your code
- */
+public class ClockHandCleaner implements DaemonInterface {
+    @Override
+    public void unleash(ThreadCB threadCB) {
+        return;
+    }
+}
