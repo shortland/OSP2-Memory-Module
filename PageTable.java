@@ -90,13 +90,4 @@ public class PageTable extends IflPageTable {
             }
         }
     }
-
-    /*
-     * Feel free to add methods/fields to improve the readability of your code
-     */
-
 }
-
-/*
- * Feel free to add local classes to improve the readability of your code
- */

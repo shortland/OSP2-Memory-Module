@@ -23,6 +23,11 @@ import osp.IFLModules.IflFrameTableEntry;
 
 public class FrameTableEntry extends IflFrameTableEntry {
     /**
+     * @see #useCounts - The amount of times the frame has been used.
+     */
+    private int useCounts;
+
+    /**
      * The frame constructor. Must have
      * 
      * super(frameID)
@@ -36,13 +41,24 @@ public class FrameTableEntry extends IflFrameTableEntry {
          * Call super for the parent obj.
          */
         super(frameID);
+
+        /**
+         * Initialize a new frame with 1 use counts.
+         */
+        this.useCounts = 1;
     }
 
-    /*
-     * Feel free to add methods/fields to improve the readability of your code
+    /**
+     * Get the # of use counts for this frame
      */
-}
+    public int getUseCounts() {
+        return this.useCounts;
+    }
 
-/*
- * Feel free to add local classes to improve the readability of your code
- */
+    /**
+     * Set the # of use counts for this frame
+     */
+    public void setUseCounts(int useCounts) {
+        this.useCounts = useCounts;
+    }
+}

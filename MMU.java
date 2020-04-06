@@ -27,14 +27,22 @@ import osp.Interrupts.*;
  */
 public class MMU extends IflMMU {
     /**
+     * Static variables
+     * 
+     * @see #clockTicksPerClean - The amount of clock ticks to wait before cleaning
+     *      all the frames
+     * @see #maxUseCount - The maximum number a frame's useCount can be set to.
+     */
+    private static int clockTicksPerClean = 4000;
+    private static int maxUseCount = 2;
+
+    /**
      * This method is called once before the simulation starts. Can be used to
      * initialize the frame table and other static variables.
      * 
      * @OSPProject Memory
      */
     public static void init() {
-        // your code goes here
-
         /**
          * Initialize all the frame table entries.
          */
@@ -45,7 +53,7 @@ public class MMU extends IflMMU {
         /**
          * Initialize the cleaner hand (daemon).
          */
-        Daemon.create("Clock hand cleaner", new ClockHandCleaner(), 4000);
+        Daemon.create("Clock hand cleaner", new ClockHandCleaner(), clockTicksPerClean);
     }
 
     /**
@@ -66,8 +74,6 @@ public class MMU extends IflMMU {
      * @OSPProject Memory
      */
     static public PageTableEntry do_refer(int memoryAddress, int referenceType, ThreadCB thread) {
-        // your code goes here
-
         /**
          * Get the page number of a memory address (get its index num from memory
          * address).
@@ -78,6 +84,7 @@ public class MMU extends IflMMU {
          * Get the PageTableEntry from it's calculated index above.
          */
         PageTableEntry page = getPTBR().pages[num];
+        FrameTableEntry frame = getPTBR().pages[num].getFrame();
 
         /**
          * If the page isn't validating, attempt to stop/interrupt processes
@@ -109,12 +116,21 @@ public class MMU extends IflMMU {
          * Since the page is referenced, set that it has been referenced. And, set dirty
          * bit if it's a write type.
          */
-        page.getFrame().setReferenced(true);
+        frame.setReferenced(true);
         if (referenceType == GlobalVariables.MemoryWrite) {
-            page.getFrame().setDirty(true);
+            frame.setDirty(true);
         } else if (referenceType == GlobalVariables.MemoryRead) {
             // don't need to set the bit in this case.
-            // page.getFrame().setDirty
+            // frame.setDirty
+        }
+
+        /**
+         * Increment the useCount of the frame.
+         */
+        if (frame.getUseCounts() == maxUseCount) {
+            // it's already set to the maximum.
+        } else {
+            frame.setUseCounts(frame.getUseCounts() + 1);
         }
 
         /**
@@ -161,6 +177,71 @@ public class MMU extends IflMMU {
 public class ClockHandCleaner implements DaemonInterface {
     @Override
     public void unleash(ThreadCB threadCB) {
+        /**
+         * Sweep through the eligible frames and decrement their use counts.
+         */
+        this.sweepEligibleFrames(threadCB);
+
+        return;
+    }
+
+    /**
+     * Sweeps through frames, and decrements the use count of them by 1.
+     */
+    private void sweepEligibleFrames(ThreadCB threadCB) {
+        PageTableEntry page;
+        FrameTableEntry frame;
+
+        /**
+         * Iterate through the frames in the frame table & swap out ones that have
+         * useCount set to 0. & decrement useCounts of frames with useCount > 0.
+         */
+        for (int i = 0; i < MMU.getFrameTableSize(); ++i) {
+            frame = MMU.getFrame(i);
+            page = MMU.getFrame(i).getPage();
+
+            /**
+             * If a frame is eligible, decrement its useCount by 1, & cannot be less than 0.
+             */
+            if (frame.getPage() != null && frame.isDirty() == true && frame.isReserved() == false
+                    && frame.getLockCount() == 0) {
+                if (frame.getUseCounts() <= 0) {
+                    // swap the frame out - thus making it clean.
+                    this.swapOutFrame(frame, threadCB);
+                } else {
+                    frame.setUseCounts(frame.getUseCounts() - 1);
+                }
+            }
+        }
+
+        return;
+    }
+
+    /**
+     * Swap a frame out - thus making it clean.
+     */
+    private void swapOutFrame(FrameTableEntry frame, ThreadCB threadCB) {
+        /**
+         * Get the frame's page and task.
+         */
+        PageTableEntry page = frame.getPage();
+        TaskCB task = frame.getPage().getTask();
+
+        /**
+         * Get the swapfile, and write out.
+         */
+        OpenFile swap = task.getSwapFile();
+        if (swap == null) {
+            return;
+        } else {
+            swap.write(page.getID(), page, threadCB);
+        }
+
+        /**
+         * Sets the frame to clean
+         */
+        frame.setDirty(false);
+
         return;
     }
 }
