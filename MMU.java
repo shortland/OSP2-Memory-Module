@@ -17,6 +17,7 @@ import osp.Tasks.*;
 import osp.Utilities.*;
 import osp.Hardware.*;
 import osp.Interrupts.*;
+import osp.FileSys.OpenFile;
 
 /**
  * The MMU class contains the student code that performs the work of handling a
@@ -116,9 +117,9 @@ public class MMU extends IflMMU {
          * Since the page is referenced, set that it has been referenced. And, set dirty
          * bit if it's a write type.
          */
-        frame.setReferenced(true);
+        page.getFrame().setReferenced(true);
         if (referenceType == GlobalVariables.MemoryWrite) {
-            frame.setDirty(true);
+            page.getFrame().setDirty(true);
         } else if (referenceType == GlobalVariables.MemoryRead) {
             // don't need to set the bit in this case.
             // frame.setDirty
@@ -127,10 +128,10 @@ public class MMU extends IflMMU {
         /**
          * Increment the useCount of the frame.
          */
-        if (frame.getUseCounts() == maxUseCount) {
+        if (page.getFrame().getUseCounts() == maxUseCount) {
             // it's already set to the maximum.
         } else {
-            frame.setUseCounts(frame.getUseCounts() + 1);
+            page.getFrame().setUseCounts(page.getFrame().getUseCounts() + 1);
         }
 
         /**
@@ -174,7 +175,7 @@ public class MMU extends IflMMU {
 
 }
 
-public class ClockHandCleaner implements DaemonInterface {
+class ClockHandCleaner implements DaemonInterface {
     @Override
     public void unleash(ThreadCB threadCB) {
         /**

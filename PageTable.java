@@ -40,9 +40,9 @@ public class PageTable extends IflPageTable {
          * Initialize the array of page table entry objects.
          */
         int num = (int) Math.pow(2, MMU.getPageAddressBits());
-        pages = new PageTableEntry[num];
+        this.pages = new PageTableEntry[num];
         for (int i = 0; i < num; ++i) {
-            pages[i] = new PageTableEntry(this, i);
+            this.pages[i] = new PageTableEntry(this, i);
         }
     }
 
@@ -56,36 +56,37 @@ public class PageTable extends IflPageTable {
         /**
          * Get task of this page.
          */
-        TaskCB currentTask = this.getTask();
+        TaskCB task = this.getTask();
 
         /**
-         * Iterate through frame table and clean up each of the frames.
+         * Iterate through frame table and clean up each of the frames. These may be
+         * changed each iteration.
          */
-        FrameTableEntry currentFrame;
-        PageTableEntry currentPage;
+        PageTableEntry page;
+        FrameTableEntry frame;
         for (int i = 0; i < MMU.getFrameTableSize(); ++i) {
             /**
              * Get current frame & page.
              */
-            currentFrame = MMU.getFrame(i);
-            currentPage = MMU.getFrame(i).getPage();
+            frame = MMU.getFrame(i);
+            page = MMU.getFrame(i).getPage();
 
             /**
              * If the current page isn't null, and task is this one, then clean it up.
              */
             // TODO:
             // might need:
-            // currentPage != null &&
-            if (currentPage.getTask() == currentTask) {
-                currentFrame.setPage(null);
-                currentFrame.setDirty(false);
-                currentFrame.setReferenced(false);
+            // page != null &&
+            if (page.getTask() == task) {
+                frame.setPage(null);
+                frame.setDirty(false);
+                frame.setReferenced(false);
 
                 /**
                  * If it's reserved, then unreserve the task.
                  */
-                if (currentFrame.getReserved() == currentTask) {
-                    currentFrame.setUnreserved(currentTask);
+                if (frame.getReserved() != null && frame.getPage().getTask() == getTask()) {
+                    frame.setUnreserved(task);
                 }
             }
         }

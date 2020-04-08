@@ -16,6 +16,7 @@ import osp.Threads.*;
 import osp.Devices.*;
 import osp.Utilities.*;
 import osp.IFLModules.*;
+import osp.FileSys.OpenFile;
 
 /**
  * The PageTableEntry object contains information about a specific virtual page
@@ -61,26 +62,27 @@ public class PageTableEntry extends IflPageTableEntry {
          * exists, start page fault with handlePageFault().
          */
         if (this.isValid() == false && this.getValidatingThread() == null) {
-            PageFaultHandler.handlePageFault(this.iorb.getThread(), GlobalVariables.MemoryLock, this);
-
-            // if the thread was killed, then return failure.
-            if (this.orb.getThread().getStatus() == ThreadKill) {
+            if (PageFaultHandler.handlePageFault(iorb.getThread(), GlobalVariables.MemoryLock, this) == FAILURE) {
                 return FAILURE;
             }
-        } else if (this.isValid() == false) {
-            if (this.getValidatingThread() != this.iorb.getThread()) {
-                this.iorb.getThread().suspend(this);
 
-                // TODO: maybe use this?
-                // if (this.iorb.getThread().getStatus() != ThreadWaiting) {
-                // return FAILURE;
-                // }
-
-                // wasn't able to suspend assuminly.
-                if (this.isValid() == false) {
-                    return FAILURE;
-                }
+            // if the thread was killed, then return failure.
+            if (iorb.getThread().getStatus() == ThreadKill) {
+                return FAILURE;
             }
+        } else if (this.isValid() == false && this.getValidatingThread() != iorb.getThread()) {
+            iorb.getThread().suspend(this);
+
+            // TODO: maybe use this?
+            // if (iorb.getThread().getStatus() != ThreadWaiting) {
+            // return FAILURE;
+            // }
+
+            // TODO: maybe use this?
+            // wasn't able to suspend assuminly.
+            // if (this.isValid() == false) {
+            // return FAILURE;
+            // }
         }
 
         return SUCCESS;
