@@ -45,7 +45,7 @@ public class FrameTableEntry extends IflFrameTableEntry {
         /**
          * Initialize a new frame with 1 use counts.
          */
-        this.useCounts = 1;
+        this.useCounts = 0;
     }
 
     /**

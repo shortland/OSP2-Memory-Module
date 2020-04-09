@@ -77,7 +77,7 @@ public class PageTable extends IflPageTable {
             // TODO:
             // might need:
             // page != null &&
-            if (page.getTask() == task) {
+            if (page != null && page.getTask() == task) {
                 frame.setPage(null);
                 frame.setDirty(false);
                 frame.setReferenced(false);
@@ -85,7 +85,7 @@ public class PageTable extends IflPageTable {
                 /**
                  * If it's reserved, then unreserve the task.
                  */
-                if (frame.getReserved() != null && frame.getPage().getTask() == getTask()) {
+                if (frame.getReserved() == task) {
                     frame.setUnreserved(task);
                 }
             }

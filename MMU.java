@@ -128,7 +128,7 @@ public class MMU extends IflMMU {
         /**
          * Increment the useCount of the frame.
          */
-        if (page.getFrame().getUseCounts() == maxUseCount) {
+        if (page.getFrame().getUseCounts() >= maxUseCount) {
             // it's already set to the maximum.
         } else {
             page.getFrame().setUseCounts(page.getFrame().getUseCounts() + 1);
@@ -181,7 +181,7 @@ class ClockHandCleaner implements DaemonInterface {
         /**
          * Sweep through the eligible frames and decrement their use counts.
          */
-        this.sweepEligibleFrames(threadCB);
+        this.sweep_eligible_frames(threadCB);
 
         return;
     }
@@ -189,7 +189,7 @@ class ClockHandCleaner implements DaemonInterface {
     /**
      * Sweeps through frames, and decrements the use count of them by 1.
      */
-    private void sweepEligibleFrames(ThreadCB threadCB) {
+    private void sweep_eligible_frames(ThreadCB threadCB) {
         PageTableEntry page;
         FrameTableEntry frame;
 
@@ -208,7 +208,7 @@ class ClockHandCleaner implements DaemonInterface {
                     && frame.getLockCount() == 0) {
                 if (frame.getUseCounts() <= 0) {
                     // swap the frame out - thus making it clean.
-                    this.swapOutFrame(frame, threadCB);
+                    this.swap_out_page(frame, threadCB);
                 } else {
                     frame.setUseCounts(frame.getUseCounts() - 1);
                 }
@@ -221,7 +221,7 @@ class ClockHandCleaner implements DaemonInterface {
     /**
      * Swap a frame out - thus making it clean.
      */
-    private void swapOutFrame(FrameTableEntry frame, ThreadCB threadCB) {
+    private void swap_out_page(FrameTableEntry frame, ThreadCB threadCB) {
         /**
          * Get the frame's page and task.
          */

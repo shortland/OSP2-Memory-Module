@@ -53,11 +53,6 @@ public class PageTableEntry extends IflPageTableEntry {
      */
     public int do_lock(IORB iorb) {
         /**
-         * First increment lockcount.
-         */
-        this.getFrame().incrementLockCount();
-
-        /**
          * Now check if the page is vaid. If it is not valid & no validation event
          * exists, start page fault with handlePageFault().
          */
@@ -85,6 +80,11 @@ public class PageTableEntry extends IflPageTableEntry {
             // }
         }
 
+        /**
+         * First increment lockcount.
+         */
+        this.getFrame().incrementLockCount();
+
         return SUCCESS;
     }
 
@@ -107,13 +107,4 @@ public class PageTableEntry extends IflPageTableEntry {
         // no lock present.
         return;
     }
-
-    /*
-     * Feel free to add methods/fields to improve the readability of your code
-     */
-
 }
-
-/*
- * Feel free to add local classes to improve the readability of your code
- */
