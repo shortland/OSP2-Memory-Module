@@ -1,0 +1,45 @@
+# Statistics 
+
+I ran the demo OSP and my own implementation of OSP's Memory module, below are short write ups of the differences between the two.
+
+## The number of pages swapped in and out
+
+My own implementation of OSP's Memory module had less pages Read. But it had a higher # of pages written. 
+
+Demo:
+    Number of pages read = 1351
+    Number of pages written = 328
+
+My Own:
+    Number of pages read = 1063
+    Number of pages written = 598
+
+## CPU utilization
+
+My own implementation had a higher CPU utilization than the demo - which probably results from the fact I had higher page writes on average than the Demo.
+
+Demo:
+    CPU Utilization: 68.7568%
+
+My Own:
+    CPU Utilization: 88.2708%
+
+## Service time per thread (avg turnaround time)
+
+My own implementation had a higher average service time per thread.
+
+Demo:
+    Average service time per thread: 21025.494
+
+My Own:
+    Average service time per thread: 27141.281
+
+## Normalized service time per thread (avg normalized turnaround time)
+
+My own implementation had a higher average normalized turnaround time.
+
+Demo:
+    Average normalized service time per thread: 0.05240652
+
+My Own:
+    Average normalized service time per thread: 0.05910696
