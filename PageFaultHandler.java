@@ -93,7 +93,9 @@ public class PageFaultHandler extends IflPageFaultHandler {
          */
         FrameTableEntry frame = choose_new_frame(thread, page);
 
-        // TODO:
+        /**
+         * Suspend thread so that we may perform swapping.
+         */
         SystemEvent event = new SystemEvent("Event: Page Faulting");
         thread.suspend(event);
 

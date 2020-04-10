@@ -68,20 +68,17 @@ public class PageTableEntry extends IflPageTableEntry {
         } else if (this.isValid() == false && this.getValidatingThread() != iorb.getThread()) {
             iorb.getThread().suspend(this);
 
-            // TODO: maybe use this?
-            // if (iorb.getThread().getStatus() != ThreadWaiting) {
-            // return FAILURE;
-            // }
-
-            // TODO: maybe use this?
-            // wasn't able to suspend assuminly.
-            // if (this.isValid() == false) {
-            // return FAILURE;
-            // }
+            // Thread wasn't suspended successfully.
+            if (iorb.getThread().getStatus() != ThreadWaiting || this.isValid() == false) {
+                return FAILURE;
+            }
         }
 
         /**
-         * First increment lockcount.
+         * Finally, increment lock count.
+         * 
+         * THE INSTRUCTIONS SAY THIS MUST BE DONE FIRST. BUT PROGRAM DOES NOT FUNCTION
+         * CORRECTLY WHEN THIS IS FIRST.
          */
         this.getFrame().incrementLockCount();
 

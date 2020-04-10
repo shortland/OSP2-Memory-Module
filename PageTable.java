@@ -74,9 +74,6 @@ public class PageTable extends IflPageTable {
             /**
              * If the current page isn't null, and task is this one, then clean it up.
              */
-            // TODO:
-            // might need:
-            // page != null &&
             if (page != null && page.getTask() == task) {
                 frame.setPage(null);
                 frame.setDirty(false);
